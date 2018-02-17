@@ -1,0 +1,7 @@
+body {
+    padding-top: 25px;
+}
+
+.form-inline > input {
+    margin-right: 15px;
+}

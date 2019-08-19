@@ -1,7 +1,23 @@
-body {
-    padding-top: 25px;
+/*body {*/
+/*    padding-top: 25px;*/
+/*}*/
+
+/*.form-inline > input {*/
+/*    margin-right: 15px;*/
+/*}*/
+
+
+.card {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
 }
 
-.form-inline > input {
-    margin-right: 15px;
+.card > img,
+.card > .cta-wrapper {
+    display: flex;
+    flex-grow: 1;
 }
+
+

@@ -180,12 +180,16 @@ export default Component;
 
 
 **Props:**
+> Props (short for properties), are a Component's configuration.  
+> A Component cannot change its props but it is responsible for putting together the props of its child Components.
 - Data flows from parent to child. _Defined in child component (this.props.name) and get value in parent component._
 - Props are immutable.
 - Component can have default props so that props are set even if a parent component doesn’t pass props down to the child.
 
 
 **State:**
+> State, is an object that is owned by the component where it is declared used to change the component.  
+> A Component manages its own state internally and has no business fiddling with the state of its children.
 - Data flows from child to parent.
     - Like when user input some new data to the child component.
 - State is mutable and private.
@@ -193,10 +197,106 @@ export default Component;
     - _setState it updates the state object and then re-renders_
     -  _how a component's data looks at a given point in time_
 
+|  | __props__ | __state__ | 
+:--- | ---: | ---: 
+Can get initial value from parent Component? | Yes | Yes
+Can be changed by parent Component? | Yes | No
+Can set default values inside Component?* | Yes | Yes
+Can change inside Component? | No | Yes
+Can set initial value for child Components? | Yes | Yes
+Can change in child Components? | Yes | No
+
+__Note__
+* Both _props_ and _state_ initial values received from parents override default values defined inside a Component.
+* Both _props_ and _state_ are plain JS objects
+* Both _props_ and _state_ changes trigger a render update
+* _props_ :: Parent => Child Component (Read through child component by `this.props`)
+* _state_ :: Created inside Component (Write by `this.setState()`, Read by `this.state`)
+
+<br/>
+
+### React Components
+
+|  | __Presentational Components__ | __Container Components__ | 
+| :--- | :--- | :--- |
+| __Type__ | Function (Stateless, Pure) | Class (Stateful, Impure) | 
+| __Purpose__ | How things look (markup, styles) | How things work (data fetching, state updates) |
+| __To read data__ | Read data from props | Subscribe to Redux state |
+| __To change data__ | Invoke callbacks from props | Dispatch Redux actions |
+| __Access to State__ | No | Yes (`this.state.XXX`) |
+| __Access to props__| Yes (`props.XXX`) | Yes (`this.props.XXX`) |
+| __Lifecycle Hooks__ | No | Yes |
+
+
+__Container Component__   
+> A container component is a component that is connected to the store and aware of application state and changes to that state.   
+> It takes that state and passes aspects of it to presentational components as props.
+
+__Presentational Component__
+> Presentational components are not aware of the store or our application state. They know about their own props.   
+> They respond to user actions by invoking callback functions that their container component passed them.
+
+
+#### Simple Stateless Component
+```javascript
+import React from 'react';
+export default () => <h1>Simple Stateless Component</h1>;
+```
+
+#### Important
+- if you want to use `this` in a react class component function, you need to use __Function Expression__ (not __Function Declaration__)
+```javascript
+declaredFunc() {
+  console.log(this); // undefined
+}
+
+expressedFunc = () => {
+  console.log(this); // the react class
+};
+```
 
 <br/>
 
 ### Component [Lifecycle](https://facebook.github.io/react/docs/react-component.html)
+> [Lifecycle Diagram](http://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)
+
+
+### 1. Mounting
+> when an instance of a component is being created and inserted into the DOM   
+  - `constructor()`
+    ```javascript
+    constructor(props) {
+      super(props);
+      // Don't call this.setState() here!
+      this.state = { counter: 0 };
+      this.handleClick = this.handleClick.bind(this);
+    }
+    ```
+  - `render()`
+  - `componentDidMount()`
+
+### 2. Updating
+> caused by changes to props or state, when a component is being re-rendered   
+  - `shouldComponentUpdate()`
+  - `render()` _render() will not be invoked if shouldComponentUpdate() returns false._
+  - `componentDidUpdate()`
+
+
+### 3. Unmounting
+> when a component is being removed from the DOM   
+  - `componentWillUnmount()`
+  
+### 4. Error Handling
+> when there is an error during rendering, in a lifecycle method, or in the constructor of any child component   
+  - `componentDidCatch()`
+
+### Other Methods
+  - `setState()`
+  - `forceUpdate()`
+  - `defaultProps` _Class Properties_
+  - `displayName` _Class Properties_
+  - ``
+
 
 **Mounting**
 
@@ -259,6 +359,23 @@ export default Component;
 - Some components don't know their children ahead of time, use the special children prop to pass children elements directly into their output.
 - In order to access nested values or components in a component, we can use props.children.
 
+
+#### JSX : `return ()` will get compiled as  `return React.createElement()`
+```javascript
+render() {
+  return (
+    <div className="App">
+      <h1>React Project is Up.</h1>
+    </div>
+  );
+}
+
+render() {
+    return React.createElement('div', {className: 'App'}, React.createElement('h1', null, 'React Project is Up.'));
+  }
+```
+
+- `this.constructor.name` will gives you name of react class addressed by `this` keyword.
 
 <br/>
 
@@ -392,7 +509,47 @@ class Parent extends Component {
 
 
 
+# [React](https://reactjs.org/) & [Redux](https://redux.js.org/) 
 
+- Redux: Serves To Construct The Application __State__
+- React: Provides The __View__ To That Application State 
+
+## Redux 3 Principles
+1. The state of your whole application is stored in an object tree within a single store.
+2. The only way to change the state is to emit an action, an object describing what happened.
+3. To specify how the state tree is transformed by actions, you write pure reducers.
+
+
+### Presentational Components VS Container Components
+
+| __#__ | Presentational Components | Container Components |
+| ----- | ------------------------- | -------------------- |
+| Purpose | How things look (_markup, styles_) | How things work (_data fetching, state updates_) |
+| Aware of Redux | No | Yes |
+| To read data | Read data from props | Subscribe to Redux state |
+| To change data | Invoke callbacks from props | Dispatch Redux actions |
+| Written | By hand | Usually generated by React Redux |
+
+- Always begin with the presentational components, then if needed promote them into container components.
+ 
+### State Flow:
+- Application State, get generated by `reducer functions`.
+
+- A `container` (smart component) will be connected to application state by:
+    - importing `connect` method from `react-redux`
+    - defining `mapStateToProps` method to return the application state as props for the container which cares about the state changes.
+    - exporting connect method value for the container and `mapStateToProps`
+
+- `Redux` generate the state object and maps that state as a props for the container component. as the state is updated, `container` will re-rendered with new state.
+ 
+
+
+### React & Redux Flow:
+- User interact with application and cause directly/indirectly an `event` being triggered (React -> Redux)
+- Redux will call action creator function which returns an object `action`, containing type of event and the changed object (Redux)
+- Action object will automatically being `sent to ALL reducers` (Redux)
+- If reducers function, care about the action, will set state with the updates in action and `return the new state` (Redux -> React)
+- Once state is changed, all container components will be notified and those related ones will be `re-rendered with new state`. (React)
 
 
 
